@@ -8,7 +8,7 @@
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   html { height: 100%; }
-  body { height: 100%; overflow: hidden; background: #0f172a; font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif; color: #e2e8f0; }
+  body { height: 100%; overflow: hidden; background: #0f172a; font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif; color: #e2e8f0; font-size: 16px; }
   #root { height: 100%; }
 </style>
 </head>
@@ -24,10 +24,10 @@ const { useState, useCallback, useMemo } = React;
 function GuideOverlay({ onClose }) {
   return (
     <div style={{ position:'absolute',inset:0,zIndex:100,background:'rgba(15,23,42,0.94)',backdropFilter:'blur(12px)',display:'flex',alignItems:'center',justifyContent:'center' }}>
-      <div style={{ background:'#1e293b',border:'1px solid #334155',borderRadius:16,maxWidth:520,width:'92%',padding:28 }}>
-        <div style={{ fontSize:10,textTransform:'uppercase',letterSpacing:'0.12em',color:'#34d399',fontWeight:600,marginBottom:14 }}>UnConsult</div>
-        <h2 style={{ fontSize:17,fontWeight:700,color:'#f1f5f9',marginBottom:4 }}>Impact and Financial Model</h2>
-        <p style={{ fontSize:12,color:'#64748b',margin:'6px 0 14px',lineHeight:1.6 }}>Model income streams, costs, reserves, and beneficiary reach over 24 months. This tool is in beta testing.</p>
+      <div style={{ background:'#1e293b',border:'1px solid #334155',borderRadius:16,maxWidth:580,width:'92%',padding:36 }}>
+        <div style={{ fontSize:13,textTransform:'uppercase',letterSpacing:'0.12em',color:'#34d399',fontWeight:600,marginBottom:16 }}>UnConsult</div>
+        <h2 style={{ fontSize:22,fontWeight:700,color:'#f1f5f9',marginBottom:6 }}>Impact and Financial Model</h2>
+        <p style={{ fontSize:15,color:'#64748b',margin:'8px 0 18px',lineHeight:1.6 }}>Model income streams, costs, reserves, and beneficiary reach over 24 months. This tool is in beta testing.</p>
         <ol style={{ listStyle:'none',counterReset:'step',padding:0,margin:0 }}>
           {[
             ['Adjust assumptions','in the left panel. Change donor numbers, gift sizes, costs, and reserves. Results update live.'],
@@ -36,13 +36,13 @@ function GuideOverlay({ onClose }) {
             ['Watch the charts','on the right. Red bars mean deficit months.'],
             ['Try stress-testing:','increase attrition from 5% to 8% and watch reserves drop. Then increase the average gift by two pounds and see if it recovers.'],
           ].map(([bold,rest],i) => (
-            <li key={i} style={{ display:'flex',gap:10,marginBottom:10,fontSize:12,color:'#94a3b8',lineHeight:1.5 }}>
-              <span style={{ minWidth:22,height:22,borderRadius:5,background:'#34d399',color:'#0f172a',fontSize:10,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>{i+1}</span>
+            <li key={i} style={{ display:'flex',gap:12,marginBottom:14,fontSize:15,color:'#94a3b8',lineHeight:1.5 }}>
+              <span style={{ minWidth:28,height:28,borderRadius:6,background:'#34d399',color:'#0f172a',fontSize:13,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>{i+1}</span>
               <span><strong style={{ color:'#f1f5f9' }}>{bold}</strong> {rest}</span>
             </li>
           ))}
         </ol>
-        <button onClick={onClose} style={{ display:'block',width:'100%',marginTop:16,padding:11,background:'#34d399',color:'#0f172a',border:'none',borderRadius:8,fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit' }}>Got it, let me start</button>
+        <button onClick={onClose} style={{ display:'block',width:'100%',marginTop:20,padding:14,background:'#34d399',color:'#0f172a',border:'none',borderRadius:8,fontSize:16,fontWeight:700,cursor:'pointer',fontFamily:'inherit' }}>Got it, let me start</button>
       </div>
     </div>
   );
@@ -98,14 +98,14 @@ function computeModel(a){
   }};
 }
 
-function MiniChart({data,dataKey,color,height=100}){
+function MiniChart({data,dataKey,color,height=140}){
   const maxVal=Math.max(...data.map(d=>Math.abs(d[dataKey])),1);
   return(
-    <div style={{position:'relative',height,width:'100%',display:'flex',alignItems:'flex-end',gap:1}}>
+    <div style={{position:'relative',height,width:'100%',display:'flex',alignItems:'flex-end',gap:2}}>
       {data.map((d,i)=>{
-        const val=d[dataKey];const h2=Math.abs(val)/maxVal*(height-12);
+        const val=d[dataKey];const h2=Math.abs(val)/maxVal*(height-16);
         return(<div key={i} style={{flex:1,display:'flex',flexDirection:'column',justifyContent:'flex-end',height:'100%'}}>
-          <div title={"Month "+d.month+": "+fmt(val)} style={{height:h2,background:val<0?'#f43f5e':color,borderRadius:'1px 1px 0 0',opacity:0.85,minHeight:1}}/>
+          <div title={"Month "+d.month+": "+fmt(val)} style={{height:h2,background:val<0?'#f43f5e':color,borderRadius:'2px 2px 0 0',opacity:0.85,minHeight:2}}/>
         </div>);
       })}
     </div>
@@ -114,12 +114,12 @@ function MiniChart({data,dataKey,color,height=100}){
 
 function Input({label,value,onChange,suffix,step}){
   return(
-    <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
-      <label style={{flex:1,fontSize:10,color:'#94a3b8',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{label}</label>
-      <div style={{display:'flex',alignItems:'center',gap:4,flexShrink:0}}>
+    <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
+      <label style={{flex:1,fontSize:14,color:'#94a3b8',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{label}</label>
+      <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
         <input type="number" value={value} onChange={e=>onChange(parseFloat(e.target.value)||0)} step={step||1}
-          style={{width:72,padding:'4px 6px',border:'1px solid #334155',borderRadius:4,background:'#0f172a',color:'#e2e8f0',fontSize:11,fontFamily:"'JetBrains Mono',monospace",textAlign:'right'}}/>
-        {suffix&&<span style={{fontSize:9,color:'#64748b',width:44,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{suffix}</span>}
+          style={{width:90,padding:'8px 10px',border:'1px solid #334155',borderRadius:6,background:'#0f172a',color:'#e2e8f0',fontSize:15,fontFamily:"'JetBrains Mono',monospace",textAlign:'right'}}/>
+        {suffix&&<span style={{fontSize:12,color:'#64748b',width:56,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{suffix}</span>}
       </div>
     </div>
   );
@@ -127,9 +127,9 @@ function Input({label,value,onChange,suffix,step}){
 
 function KPI({label,value,accent}){
   return(
-    <div style={{background:'#1e293b',borderRadius:6,padding:'8px 10px',borderLeft:'3px solid '+(accent||'#22d3ee'),flex:1,minWidth:0}}>
-      <div style={{fontSize:8,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{label}</div>
-      <div style={{fontSize:16,fontWeight:700,color:'#f1f5f9',fontFamily:"'JetBrains Mono',monospace"}}>{value}</div>
+    <div style={{background:'#1e293b',borderRadius:8,padding:'12px 14px',borderLeft:'4px solid '+(accent||'#22d3ee'),flex:1,minWidth:0}}>
+      <div style={{fontSize:11,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{label}</div>
+      <div style={{fontSize:22,fontWeight:700,color:'#f1f5f9',fontFamily:"'JetBrains Mono',monospace"}}>{value}</div>
     </div>
   );
 }
@@ -155,24 +155,24 @@ function App(){
     <div style={{height:'100%',display:'flex',flexDirection:'column',overflow:'hidden',position:'relative'}}>
       {showGuide&&<GuideOverlay onClose={()=>setShowGuide(false)}/>}
 
-      <button onClick={()=>setShowGuide(true)} style={{position:'absolute',bottom:8,right:8,zIndex:50,padding:'4px 10px',borderRadius:12,border:'1px solid #334155',background:'#1e293b',color:'#64748b',fontSize:10,cursor:'pointer',fontFamily:'inherit'}}>? Help</button>
+      <button onClick={()=>setShowGuide(true)} style={{position:'absolute',bottom:12,right:12,zIndex:50,padding:'6px 14px',borderRadius:14,border:'1px solid #334155',background:'#1e293b',color:'#94a3b8',fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>? Help</button>
 
       {/* Top bar */}
-      <div style={{padding:'8px 16px',borderBottom:'1px solid #1e293b',display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0}}>
+      <div style={{padding:'12px 20px',borderBottom:'1px solid #1e293b',display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0}}>
         <div>
-          <div style={{fontSize:9,color:'#34d399',textTransform:'uppercase',letterSpacing:'0.15em',fontWeight:600}}>UnConsult</div>
-          <div style={{fontSize:14,fontWeight:700,color:'#f1f5f9'}}>Impact and Financial Model</div>
+          <div style={{fontSize:12,color:'#34d399',textTransform:'uppercase',letterSpacing:'0.15em',fontWeight:600}}>UnConsult</div>
+          <div style={{fontSize:20,fontWeight:700,color:'#f1f5f9'}}>Impact and Financial Model</div>
         </div>
-        <div style={{display:'flex',gap:4,flexWrap:'wrap',alignItems:'center'}}>
+        <div style={{display:'flex',gap:6,flexWrap:'wrap',alignItems:'center'}}>
           {Object.keys(PRESETS).map(name=>(
             <button key={name} onClick={()=>applyPreset(name)} style={{
-              padding:'4px 10px',borderRadius:12,fontSize:10,cursor:'pointer',fontFamily:'inherit',
+              padding:'6px 14px',borderRadius:14,fontSize:13,cursor:'pointer',fontFamily:'inherit',
               border:preset===name?'1px solid #34d399':'1px solid #334155',
               background:preset===name?'rgba(52,211,153,0.1)':'transparent',
               color:preset===name?'#34d399':'#94a3b8',
             }}>{name}</button>
           ))}
-          <span style={{padding:'4px 8px',borderRadius:10,background:'rgba(52,211,153,0.12)',color:'#34d399',fontSize:9,fontWeight:600}}>BETA</span>
+          <span style={{padding:'5px 10px',borderRadius:12,background:'rgba(52,211,153,0.12)',color:'#34d399',fontSize:11,fontWeight:600}}>BETA</span>
         </div>
       </div>
 
@@ -180,44 +180,44 @@ function App(){
       <div style={{flex:1,display:'flex',overflow:'hidden',minHeight:0}}>
 
         {/* LEFT: Assumptions */}
-        <div style={{width:340,minWidth:340,borderRight:'1px solid #1e293b',display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <div style={{width:380,minWidth:380,borderRight:'1px solid #1e293b',display:'flex',flexDirection:'column',overflow:'hidden'}}>
           <div style={{display:'flex',gap:0,borderBottom:'1px solid #1e293b',flexShrink:0}}>
             {sections.map(s=>(
               <button key={s.id} onClick={()=>setSection(s.id)} style={{
-                flex:1,padding:'6px 4px',background:'transparent',border:'none',fontFamily:'inherit',
-                borderBottom:section===s.id?'2px solid '+s.color:'2px solid transparent',
-                color:section===s.id?'#f1f5f9':'#64748b',fontSize:10,fontWeight:600,cursor:'pointer',
+                flex:1,padding:'10px 6px',background:'transparent',border:'none',fontFamily:'inherit',
+                borderBottom:section===s.id?'3px solid '+s.color:'3px solid transparent',
+                color:section===s.id?'#f1f5f9':'#64748b',fontSize:14,fontWeight:600,cursor:'pointer',
               }}>{s.label}</button>
             ))}
           </div>
-          <div style={{flex:1,overflow:'auto',padding:'10px 14px',minHeight:0}}>
+          <div style={{flex:1,overflow:'auto',padding:'16px 20px',minHeight:0}}>
             {section==="donors"&&<>
               <Input label="Current donor base" value={a.individualDonorsBase} onChange={v=>update("individualDonorsBase",v)} suffix="donors"/>
               <Input label="Average monthly gift" value={a.avgGiftPerMonth} onChange={v=>update("avgGiftPerMonth",v)} suffix={"\u00A3/mo"} step={1}/>
               <Input label="Monthly attrition" value={a.donorAttritionPct} onChange={v=>update("donorAttritionPct",v)} suffix="%" step={0.1}/>
-              <Input label="New donors/month" value={a.newDonorAcquisitionPerMonth} onChange={v=>update("newDonorAcquisitionPerMonth",v)} suffix="/mo"/>
+              <Input label="New donors/month" value={a.newDonorAcquisitionPerMonth} onChange={v=>update("newDonorAcquisitionPerMonth",v)} suffix="/month"/>
               <Input label="Acquisition cost" value={a.acquisitionCostPerDonor} onChange={v=>update("acquisitionCostPerDonor",v)} suffix={"\u00A3/donor"} step={5}/>
             </>}
             {section==="trusts"&&<>
-              <Input label="Annual trust income" value={a.trustGrantsAnnual} onChange={v=>update("trustGrantsAnnual",v)} suffix={"\u00A3/yr"}/>
+              <Input label="Annual trust income" value={a.trustGrantsAnnual} onChange={v=>update("trustGrantsAnnual",v)} suffix={"\u00A3/year"}/>
               <Input label="Annual growth" value={a.trustGrowthPct} onChange={v=>update("trustGrowthPct",v)} suffix="%" step={0.5}/>
               <Input label="Renewal rate" value={a.trustRenewalPct} onChange={v=>update("trustRenewalPct",v)} suffix="%"/>
-              <Input label="New applications/year" value={a.newTrustApplicationsPerYear} onChange={v=>update("newTrustApplicationsPerYear",v)} suffix="/yr"/>
+              <Input label="New applications/year" value={a.newTrustApplicationsPerYear} onChange={v=>update("newTrustApplicationsPerYear",v)} suffix="/year"/>
               <Input label="Average new grant" value={a.avgNewTrustGrant} onChange={v=>update("avgNewTrustGrant",v)} suffix={"\u00A3"}/>
               <Input label="Success rate" value={a.trustSuccessRate} onChange={v=>update("trustSuccessRate",v)} suffix="%"/>
             </>}
             {section==="statutory"&&<>
-              <Input label="Annual contract value" value={a.statutoryContractAnnual} onChange={v=>update("statutoryContractAnnual",v)} suffix={"\u00A3/yr"}/>
+              <Input label="Annual contract value" value={a.statutoryContractAnnual} onChange={v=>update("statutoryContractAnnual",v)} suffix={"\u00A3/year"}/>
               <Input label="Annual growth" value={a.statutoryGrowthPct} onChange={v=>update("statutoryGrowthPct",v)} suffix="%" step={0.5}/>
               <Input label="Renewal risk discount" value={a.contractRenewalRisk} onChange={v=>update("contractRenewalRisk",v)} suffix="%"/>
-              <div style={{fontSize:10,color:'#475569',marginTop:8,lineHeight:1.5}}>Discounts statutory income to reflect probability contracts may not be renewed. Set to 0% if confirmed.</div>
+              <div style={{fontSize:13,color:'#475569',marginTop:12,lineHeight:1.6}}>Discounts statutory income to reflect probability contracts may not be renewed. Set to 0% if confirmed.</div>
             </>}
             {section==="costs"&&<>
-              <div style={{fontSize:10,fontWeight:600,color:'#34d399',marginBottom:6,textTransform:'uppercase'}}>Programme</div>
+              <div style={{fontSize:13,fontWeight:600,color:'#34d399',marginBottom:8,textTransform:'uppercase'}}>Programme</div>
               <Input label="Cost per beneficiary" value={a.costPerBeneficiary} onChange={v=>update("costPerBeneficiary",v)} suffix={"\u00A3"} step={5}/>
               <Input label="Annual beneficiaries" value={a.beneficiariesCurrentAnnual} onChange={v=>update("beneficiariesCurrentAnnual",v)}/>
               <Input label="Growth target" value={a.beneficiaryGrowthTarget} onChange={v=>update("beneficiaryGrowthTarget",v)} suffix="%"/>
-              <div style={{fontSize:10,fontWeight:600,color:'#f43f5e',marginTop:10,marginBottom:6,textTransform:'uppercase'}}>Overheads and reserves</div>
+              <div style={{fontSize:13,fontWeight:600,color:'#f43f5e',marginTop:14,marginBottom:8,textTransform:'uppercase'}}>Overheads and reserves</div>
               <Input label="Staff costs" value={a.staffCostsPerMonth} onChange={v=>update("staffCostsPerMonth",v)} suffix={"\u00A3/mo"}/>
               <Input label="Premises" value={a.premisesPerMonth} onChange={v=>update("premisesPerMonth",v)} suffix={"\u00A3/mo"}/>
               <Input label="Systems/ops" value={a.systemsAndOpsCostPerMonth} onChange={v=>update("systemsAndOpsCostPerMonth",v)} suffix={"\u00A3/mo"}/>
@@ -230,13 +230,13 @@ function App(){
 
         {/* RIGHT: Results */}
         <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minHeight:0}}>
-          <div style={{display:'flex',gap:8,padding:'8px 14px',flexShrink:0}}>
+          <div style={{display:'flex',gap:10,padding:'12px 18px',flexShrink:0}}>
             <KPI label="Year 1 income" value={fmt(model.summary.year1Income)} accent="#34d399"/>
             <KPI label="Year 1 net" value={fmt(model.summary.year1Net)} accent={model.summary.year1Net>=0?'#34d399':'#f43f5e'}/>
             <KPI label="Month 24 reserves" value={fmt(model.summary.month24Reserves)} accent={model.summary.month24Reserves>=model.summary.targetReserves?'#a78bfa':'#f43f5e'}/>
             <KPI label="Donor dependency" value={model.summary.donorDependency.toFixed(0)+"%"} accent="#22d3ee"/>
           </div>
-          <div style={{flex:1,display:'grid',gridTemplateColumns:'1fr 1fr',gridTemplateRows:'1fr 1fr',gap:8,padding:'4px 14px 10px',overflow:'hidden',minHeight:0}}>
+          <div style={{flex:1,display:'grid',gridTemplateColumns:'1fr 1fr',gridTemplateRows:'1fr 1fr',gap:12,padding:'6px 18px 14px',overflow:'hidden',minHeight:0}}>
             {[
               {label:"Total Income (monthly)",key:"totalIncome",color:"#34d399"},
               {label:"Net Position (monthly)",key:"netPosition",color:"#22d3ee"},
@@ -244,9 +244,9 @@ function App(){
               {label:"Active Donors",key:"activeDonors",color:"#fb923c"},
             ].map(ch=>(
               <div key={ch.key} style={{display:'flex',flexDirection:'column',minHeight:0}}>
-                <div style={{fontSize:10,color:'#94a3b8',fontWeight:600,marginBottom:4}}>{ch.label}</div>
-                <div style={{flex:1,minHeight:0}}><MiniChart data={model.months} dataKey={ch.key} color={ch.color} height={120}/></div>
-                <div style={{display:'flex',justifyContent:'space-between',fontSize:8,color:'#475569',marginTop:2}}><span>M1</span><span>M24</span></div>
+                <div style={{fontSize:13,color:'#94a3b8',fontWeight:600,marginBottom:6}}>{ch.label}</div>
+                <div style={{flex:1,minHeight:0}}><MiniChart data={model.months} dataKey={ch.key} color={ch.color}/></div>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:11,color:'#475569',marginTop:4}}><span>Month 1</span><span>Month 24</span></div>
               </div>
             ))}
           </div>
@@ -261,3 +261,4 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 </body>
 </html>
+
