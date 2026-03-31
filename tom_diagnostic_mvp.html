@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOM Method Diagnostic</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+  background:#0f172a;
+  color:#e2e8f0;
+  font-size:14px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+:root{
+  --cyan:#00B4D8;--navy:#1B2A3D;--green:#34D399;--green-dim:rgba(52,211,153,0.12);
+  --surface:#0f172a;--card:#1e293b;--border:#334155;--text:#e2e8f0;
+  --muted:#94a3b8;--dim:#64748b;--faint:#475569;
+  --danger:#f43f5e;--warn:#fb923c;--purple:#a78bfa;
+}
+
+/* ── Password gate ── */
+#tom-gate{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:200;display:flex;align-items:center;justify-content:center}
+#tom-gate-box{background:var(--card);border-radius:16px;padding:40px 36px;max-width:420px;width:92%;text-align:center;border:1px solid var(--border);box-shadow:0 24px 64px rgba(0,0,0,0.5)}
+#tom-gate input[type=password]{width:100%;padding:14px 16px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:15px;font-family:inherit;margin-bottom:14px;text-align:center;letter-spacing:0.15em;transition:border-color 0.2s}
+#tom-gate input[type=password]:focus{outline:none;border-color:var(--cyan)}
+#tom-gate input[type=password]::placeholder{letter-spacing:0.05em;color:var(--faint)}
+.tom-gate-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--cyan),var(--green));color:var(--navy);border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity 0.2s}
+.tom-gate-btn:hover{opacity:0.9}
+#tom-gate-error{font-size:12px;color:var(--danger);margin-top:8px;display:none}
+
+/* ── Header ── */
+.tom-header{padding:18px 24px;background:linear-gradient(135deg,var(--navy) 0%,#0c1220 100%);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.tom-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em}
+.tom-inner{padding:28px 24px;max-width:780px;margin:0 auto}
+
+/* ── Progress ── */
+.tom-progress-track{height:4px;background:var(--card);border-radius:2px;overflow:hidden;margin-bottom:24px}
+.tom-progress-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--green));border-radius:2px;transition:width 0.4s ease}
+
+/* ── Pillar nav ── */
+.tom-pillar-nav{display:flex;gap:4px;margin-bottom:24px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.tom-pillar-btn{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all 0.2s}
+.tom-pillar-btn.active{background:var(--cyan);color:var(--navy);border-color:var(--cyan)}
+.tom-pillar-btn.complete{border-color:var(--green);color:var(--green)}
+.tom-pillar-btn:hover:not(.active){border-color:var(--muted)}
+
+/* ── Questions ── */
+.tom-q-card{background:var(--card);border-radius:12px;padding:20px;margin-bottom:12px;border:1px solid var(--border);transition:border-color 0.2s}
+.tom-q-card.answered{border-color:rgba(52,211,153,0.3)}
+.tom-q-num{font-size:10px;font-weight:700;color:var(--cyan);font-family:'JetBrains Mono',monospace;margin-bottom:6px}
+.tom-q-text{font-size:13px;color:var(--text);line-height:1.65;margin-bottom:12px}
+.tom-score-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tom-score-btn{width:42px;height:42px;border-radius:10px;border:1px solid var(--border);background:transparent;font-weight:700;font-size:15px;cursor:pointer;transition:all 0.15s ease;font-family:inherit;color:var(--dim)}
+.tom-score-btn.selected{background:var(--cyan);color:var(--navy);border-color:var(--cyan)}
+.tom-score-btn:hover:not(.selected){border-color:var(--muted);color:var(--text)}
+.tom-score-label{font-size:11px;color:var(--dim);margin-left:8px;font-family:'JetBrains Mono',monospace}
+
+/* ── Qualitative prompt ── */
+.tom-qual{background:var(--surface);border-radius:10px;padding:16px;margin-top:16px;border:1px solid var(--border)}
+.tom-qual textarea{width:100%;min-height:64px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-size:13px;font-family:inherit;resize:vertical;line-height:1.5}
+.tom-qual textarea:focus{outline:none;border-color:var(--cyan)}
+
+/* ── Conditional depth ── */
+.tom-depth{background:rgba(0,180,216,0.06);border-radius:10px;padding:16px;margin-top:12px;border:1px solid rgba(0,180,216,0.2)}
+.tom-depth-option{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);margin-bottom:6px;cursor:pointer;transition:all 0.15s}
+.tom-depth-option:hover{border-color:var(--muted)}
+.tom-depth-option.selected{border-color:var(--cyan);background:rgba(0,180,216,0.08)}
+.tom-depth-radio{width:16px;height:16px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;margin-top:2px;transition:all 0.15s;display:flex;align-items:center;justify-content:center}
+.tom-depth-option.selected .tom-depth-radio{border-color:var(--cyan)}
+.tom-depth-option.selected .tom-depth-radio::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--cyan)}
+
+/* ── Navigation ── */
+.tom-nav{display:flex;gap:12px;justify-content:space-between;margin-top:24px;flex-wrap:wrap}
+.tom-btn{padding:12px 28px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;border:none;transition:all 0.2s}
+.tom-btn-primary{background:linear-gradient(135deg,var(--cyan),var(--green));color:var(--navy)}
+.tom-btn-primary:hover{opacity:0.9}
+.tom-btn-secondary{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.tom-btn-secondary:hover{border-color:var(--muted)}
+.tom-btn:disabled{opacity:0.3;cursor:not-allowed}
+
+/* ── Results ── */
+.tom-result-card{background:var(--card);border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid var(--border)}
+.tom-bar-track{height:32px;background:var(--surface);border-radius:8px;overflow:hidden;position:relative}
+.tom-bar-fill{height:100%;border-radius:8px;transition:width 0.6s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:10px;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;min-width:40px}
+.tom-rating{display:inline-flex;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace}
+.tom-weakest{background:linear-gradient(135deg,rgba(244,63,94,0.08),rgba(244,63,94,0.03));border:1px solid rgba(244,63,94,0.2);border-radius:12px;padding:20px;margin-bottom:20px}
+.tom-rec{background:var(--card);border-radius:10px;padding:16px;margin-bottom:10px;border-left:3px solid var(--cyan)}
+.tom-template-tag{display:inline-flex;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600;font-family:'JetBrains Mono',monospace;background:rgba(0,180,216,0.1);color:var(--cyan);margin-right:4px;margin-bottom:4px}
+.tom-cta-box{background:var(--card);border-radius:12px;padding:24px;border-left:3px solid var(--green);margin-top:24px}
+.tom-cta-link{display:inline-block;margin-top:12px;padding:12px 28px;background:var(--green);color:var(--navy);border-radius:24px;font-size:13px;font-weight:700;text-decoration:none;transition:opacity 0.2s}
+.tom-cta-link:hover{opacity:0.9}
+
+/* ── Intro ── */
+.tom-intro-pillar{background:var(--card);border-radius:10px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px;border:1px solid var(--border)}
+.tom-intro-num{width:28px;height:28px;border-radius:8px;background:var(--cyan);color:var(--navy);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+
+/* ── Mobile ── */
+@media(max-width:600px){
+  .tom-inner{padding:20px 16px}
+  .tom-header{padding:14px 16px}
+  .tom-score-btn{width:38px;height:38px;font-size:14px}
+  .tom-nav{flex-direction:column}
+  .tom-nav .tom-btn{width:100%;text-align:center}
+  .tom-result-card{padding:16px}
+  .tom-cta-box{padding:18px}
+}
+
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+@media print{#tom-gate{display:none!important}}
+</style>
+</head>
+<body>
+
+<!-- Password Gate -->
+<div id="tom-gate">
+<div id="tom-gate-box">
+<div style="font-size:10px;color:var(--cyan);text-transform:uppercase;letter-spacing:0.15em;font-weight:600;margin-bottom:6px">Unconsult</div>
+<h3 style="font-size:20px;font-weight:700;color:#f1f5f9;margin-bottom:6px">TOM Method Diagnostic</h3>
+<p style="font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6">This tool is in private beta. Enter the access code to continue.</p>
+<input type="password" id="tom-gate-pw" placeholder="Access code" onkeydown="if(event.key==='Enter')tomGateCheck()">
+<button class="tom-gate-btn" onclick="tomGateCheck()">Enter</button>
+<div id="tom-gate-error">That code is not recognised. Please try again.</div>
+</div>
+</div>
+
+<!-- Main -->
+<div id="tom-main" style="display:none">
+<div class="tom-header">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+<div>
+<div style="font-size:10px;color:var(--cyan);text-transform:uppercase;letter-spacing:0.15em;font-weight:600;margin-bottom:2px">Unconsult</div>
+<h2 style="font-size:20px;font-weight:700;color:#f1f5f9">TOM Method Diagnostic</h2>
+<p style="font-size:12px;color:var(--dim);margin-top:2px">Assess your organisation's operational infrastructure across five pillars</p>
+</div>
+<div style="display:flex;gap:8px;align-items:center">
+<button onclick="tomReset()" style="padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:12px;cursor:pointer;font-family:inherit">Reset</button>
+<div class="tom-pill" style="background:rgba(0,180,216,0.1);color:var(--cyan)">MVP</div>
+</div>
+</div>
+</div>
+<div class="tom-inner" id="tom-content"></div>
+</div>
+
+<script>
+(function(){
+// ═══════ CONFIG ═══════
+var ACCESS_CODE='unconsult2026';
+var STORAGE_KEY='tom_diag_v1';
+
+// ═══════ DATA ═══════
+var PILLARS=[
+{id:'sd',name:'Strategic Direction',short:'Strategy',desc:'What the organisation is trying to achieve and how alignment is maintained.',color:'#00B4D8'},
+{id:'oa',name:'Operating Architecture',short:'Architecture',desc:'How strategic work is structured across programmes and initiatives.',color:'#34D399'},
+{id:'sp',name:'Strategic Prioritisation',short:'Prioritisation',desc:'How decisions are made about what to focus on and what to stop.',color:'#a78bfa'},
+{id:'ds',name:'Delivery System',short:'Delivery',desc:'How work progresses, risks are managed, and delivery is coordinated.',color:'#fb923c'},
+{id:'gl',name:'Governance and Learning',short:'Governance',desc:'How decisions are made, progress reviewed, and the organisation adapts.',color:'#22d3ee'}
+];
+
+var QUESTIONS={
+sd:['If you asked five people in your organisation what the top three priorities are right now, would they give you the same answer?','For each of your main priorities, is it clear what success looks like and how you would measure it?','Do your senior leaders genuinely agree on what matters most, or do they privately pursue different agendas?','Could a frontline team member explain how their day-to-day work connects to the organisation\u2019s strategy?','When did your leadership team last properly review whether your strategy is still right? Could you name the date?'],
+oa:['If someone asked you to list every significant initiative, project, or programme your organisation is currently running, could you do it in under five minutes?','Do you have initiatives that overlap, duplicate effort, or compete for the same resources without anyone formally acknowledging it?','For every major piece of work in your organisation, is there one named person who is clearly accountable for its success or failure?','Are your initiatives grouped or structured in a way that makes it obvious how they relate to each other and to your strategic priorities?','When one initiative depends on another to succeed, is that dependency written down and actively managed, or does it only surface when something breaks?'],
+sp:['When someone proposes a new initiative or project, is there a consistent process for evaluating whether it should go ahead?','In the last 12 months, has your organisation formally stopped or deprioritised a piece of work because it was no longer the best use of resources?','Does your organisation have a way of comparing initiatives against each other to decide where to focus, or does everything that gets started just keep going?','Are your people and money allocated in line with your stated priorities, or do legacy commitments and pet projects absorb most of the capacity?','When you are asked to take on something new, do you have a credible mechanism for saying no or not yet?'],
+ds:['For your most important initiatives, could you check their current status right now without having to ask someone or dig through emails?','When delivery risks emerge, do they get surfaced early and dealt with, or do they tend to become visible only when something has already gone wrong?','Is there a regular rhythm of delivery reviews (weekly, monthly, quarterly) that actually happens consistently, or do review meetings get cancelled or skipped?','Are you confident that the metrics you track for delivery actually tell you whether things are on track, or are they mostly activity measures that look busy but say little?','Can your senior leaders see how delivery is progressing across the organisation without needing a special briefing?'],
+gl:['When a decision needs to be made that affects multiple teams, is it clear where that decision gets made and by whom?','If something is stuck or blocked and the people involved cannot resolve it themselves, is there a clear route to escalate it to someone who can?','Does your leadership team regularly review strategic progress with enough rigour to actually change course when needed, or are review meetings mainly updates?','When something goes wrong or a project fails, does your organisation genuinely learn from it and change how it operates, or does it just move on?','Could you draw a simple map of your governance forums (boards, committees, leadership meetings) and explain what each one is for and what decisions it owns?']
+};
+
+var DEPTH_OPTIONS={
+sd:['We do not have a clearly articulated strategy.','We have a strategy document but it does not drive day-to-day decisions.','Our leadership team disagrees on strategic direction.','Strategy exists at the top but has not been translated for teams.'],
+oa:['We do not have a clear picture of everything we are currently doing.','We know what is happening but nobody clearly owns it.','Initiatives overlap and compete but nobody resolves the conflicts.','Work is structured around individuals rather than programmes or priorities.'],
+sp:['We have no process for evaluating new work before it starts.','We have a process but it gets bypassed regularly.','We cannot stop things that have already started, even when they should stop.','We do not have a clear picture of what we are committed to, so we cannot prioritise.'],
+ds:['We do not consistently track progress on our most important work.','We track activity but not outcomes, so we cannot tell if things are actually working.','Risks and blockers surface too late because there is no regular review rhythm.','Leadership does not have visibility of delivery, so problems go unnoticed.'],
+gl:['We do not have clearly defined forums for making decisions.','We have forums but decision rights are unclear, so things get stuck.','We review progress but rarely change course based on what we find.','When things go wrong, we move on without understanding why.']
+};
+
+var TEMPLATES={
+sd:[{num:1,name:'Strategic Priorities Map',desc:'Defines 3\u20135 strategic priorities with outcomes, success metrics, and owners'},{num:2,name:'Strategic Outcomes Framework',desc:'Links priorities to measurable outcomes for tracking'},{num:3,name:'Leadership Alignment Canvas',desc:'Aligns leadership on priorities, risks, and dependencies'}],
+oa:[{num:4,name:'Programme Architecture Map',desc:'Structures work into programmes and initiatives'},{num:5,name:'Initiative Landscape Map',desc:'Visualises all initiatives across the organisation'},{num:6,name:'Ownership and Accountability Map',desc:'Defines ownership for initiatives and programmes'}],
+sp:[{num:7,name:'Prioritisation Framework',desc:'Scores initiatives on alignment, impact, and effort'},{num:8,name:'Initiative Intake Template',desc:'Standard process for proposing new initiatives'},{num:9,name:'Portfolio Review Template',desc:'Reviews, stops, or reprioritises initiatives'}],
+ds:[{num:10,name:'Strategic Delivery Dashboard',desc:'Tracks initiative progress and risk status'},{num:11,name:'Delivery Cadence Framework',desc:'Defines review cycles (weekly, monthly, quarterly)'},{num:12,name:'Delivery Risk Register',desc:'Captures and escalates delivery risks'}],
+gl:[{num:13,name:'Governance Forum Map',desc:'Defines forums, their purpose, and decision scope'},{num:14,name:'Decision Rights Framework',desc:'Clarifies who makes which decisions'},{num:15,name:'Strategic Review Template',desc:'Structures leadership review of strategic performance'}]
+};
+
+var SCORE_LABELS={1:'Very weak',2:'Weak',3:'Moderate',4:'Strong',5:'Very strong'};
+var RATINGS=[
+{min:5,max:10,label:'Critical',color:'#f43f5e',bg:'rgba(244,63,94,0.12)',meaning:'This system is largely absent or broken. Immediate attention required.'},
+{min:11,max:15,label:'Weak',color:'#fb923c',bg:'rgba(251,146,60,0.12)',meaning:'Some foundations exist but significant gaps undermine effectiveness.'},
+{min:16,max:20,label:'Developing',color:'#00B4D8',bg:'rgba(0,180,216,0.12)',meaning:'Systems are in place but inconsistently applied or partially effective.'},
+{min:21,max:25,label:'Strong',color:'#34D399',bg:'rgba(52,211,153,0.12)',meaning:'Well-established systems operating effectively across the organisation.'}
+];
+
+// ═══════ STATE ═══════
+var state={screen:'intro',pillar:0,scores:{},quals:{},depths:{}};
+
+// ═══════ GATE ═══════
+var gate=document.getElementById('tom-gate');
+var mainEl=document.getElementById('tom-main');
+if(localStorage.getItem(STORAGE_KEY)){gate.style.display='none';mainEl.style.display='block';}
+
+window.tomGateCheck=function(){
+var pw=document.getElementById('tom-gate-pw').value.trim();
+if(pw===ACCESS_CODE){localStorage.setItem(STORAGE_KEY,'1');gate.style.display='none';mainEl.style.display='block';render();}
+else{document.getElementById('tom-gate-error').style.display='block';document.getElementById('tom-gate-pw').style.borderColor='#f43f5e';setTimeout(function(){document.getElementById('tom-gate-pw').style.borderColor='';document.getElementById('tom-gate-error').style.display='none';},2000);}
+};
+
+window.tomReset=function(){if(confirm('Reset all scores and start over?')){state={screen:'intro',pillar:0,scores:{},quals:{},depths:{}};render();}};
+
+// ═══════ HELPERS ═══════
+function ps(pid){var t=0,c=0;for(var i=0;i<5;i++){var k=pid+'_'+i;if(state.scores[k]){t+=state.scores[k];c++;}}return{total:t,answered:c};}
+function allAns(pid){for(var i=0;i<5;i++){if(!state.scores[pid+'_'+i])return false;}return true;}
+function totScore(){var t=0;PILLARS.forEach(function(p){t+=ps(p.id).total;});return t;}
+function totAns(){var t=0;PILLARS.forEach(function(p){t+=ps(p.id).answered;});return t;}
+function getRat(s){for(var i=0;i<RATINGS.length;i++){if(s>=RATINGS[i].min&&s<=RATINGS[i].max)return RATINGS[i];}return RATINGS[0];}
+function overRat(t){if(t<=50)return{label:'Critical',color:'#f43f5e'};if(t<=75)return{label:'Weak',color:'#fb923c'};if(t<=100)return{label:'Developing',color:'#00B4D8'};return{label:'Strong',color:'#34D399'};}
+
+// Wix iFrame height sync
+function syncHeight(){try{var h=document.documentElement.scrollHeight;window.parent.postMessage(JSON.stringify({type:'setHeight',height:h}),'*');}catch(e){}}
+
+// ═══════ RENDER ═══════
+function render(){
+var el=document.getElementById('tom-content');
+if(state.screen==='intro')el.innerHTML=renderIntro();
+else if(state.screen==='diagnostic')el.innerHTML=renderDiag();
+else if(state.screen==='results')el.innerHTML=renderResults();
+window.scrollTo({top:0,behavior:'smooth'});
+setTimeout(syncHeight,150);
+}
+
+function renderIntro(){
+var h='<div style="max-width:640px;margin:0 auto;padding:12px 0">';
+h+='<div style="text-align:center;margin-bottom:32px">';
+h+='<div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,var(--cyan),var(--green));display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px"><span style="font-size:28px;font-weight:700;color:var(--navy)">T</span></div>';
+h+='<h2 style="font-size:24px;font-weight:700;color:#f1f5f9;margin-bottom:8px">How strong is your operational infrastructure?</h2>';
+h+='<p style="font-size:14px;color:var(--muted);line-height:1.6;max-width:480px;margin:0 auto">25 questions across five pillars. Takes about 10 minutes. You will get a detailed diagnostic report with specific recommendations and template suggestions for your weakest areas.</p>';
+h+='</div>';
+h+='<div style="margin-bottom:28px">';
+PILLARS.forEach(function(p,i){
+h+='<div class="tom-intro-pillar"><div class="tom-intro-num">'+(i+1)+'</div><div><div style="font-size:13px;font-weight:600;color:#f1f5f9">'+p.name+'</div><div style="font-size:12px;color:var(--dim);line-height:1.4;margin-top:2px">'+p.desc+'</div></div></div>';
+});
+h+='</div>';
+h+='<div style="background:var(--card);border-radius:12px;padding:20px;margin-bottom:24px;border:1px solid var(--border)">';
+h+='<h3 style="font-size:13px;font-weight:600;color:#f1f5f9;margin-bottom:10px">How scoring works</h3>';
+h+='<p style="font-size:12px;color:var(--dim);line-height:1.5;margin-bottom:12px">Each question is scored 1 (very weak) to 5 (very strong). Five questions per pillar gives a pillar score from 5 to 25.</p>';
+h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+RATINGS.forEach(function(r){h+='<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;background:'+r.bg+'"><span style="font-size:11px;font-weight:700;color:'+r.color+';font-family:\'JetBrains Mono\',monospace;width:36px">'+r.min+'\u2013'+r.max+'</span><span style="font-size:11px;color:'+r.color+';font-weight:600">'+r.label+'</span></div>';});
+h+='</div></div>';
+h+='<div style="text-align:center"><button class="tom-btn tom-btn-primary" onclick="tomStart()" style="padding:14px 48px;font-size:15px">Start diagnostic</button></div>';
+h+='<div class="tom-cta-box" style="margin-top:32px"><div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:0.1em;font-weight:600;margin-bottom:6px">Coming soon</div>';
+h+='<h3 style="font-size:14px;color:#f1f5f9;font-weight:600;margin-bottom:6px">Document upload and AI pre-assessment</h3>';
+h+='<p style="font-size:12px;color:var(--dim);line-height:1.5">The full version will analyse your uploaded documents (board packs, strategy docs, risk registers) against the five pillars before you answer a single question, surfacing gaps you cannot see from perception alone.</p></div>';
+h+='</div>';
+return h;
+}
+
+function renderDiag(){
+var p=PILLARS[state.pillar],pid=p.id,qs=QUESTIONS[pid],psc=ps(pid),ad=allAns(pid),ta=totAns();
+var h='<div class="tom-progress-track"><div class="tom-progress-fill" style="width:'+(ta/25*100)+'%"></div></div>';
+h+='<div class="tom-pillar-nav">';
+PILLARS.forEach(function(pl,i){var cls='tom-pillar-btn';if(i===state.pillar)cls+=' active';else if(allAns(pl.id))cls+=' complete';var b=ps(pl.id);var badge=b.answered>0?' ('+b.answered+'/5)':'';h+='<button class="'+cls+'" onclick="tomPillar('+i+')">'+pl.short+badge+'</button>';});
+h+='</div>';
+h+='<div style="margin-bottom:20px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap"><div style="width:8px;height:8px;border-radius:50%;background:'+p.color+'"></div><h3 style="font-size:18px;font-weight:700;color:#f1f5f9">'+p.name+'</h3>';
+if(ad){var r=getRat(psc.total);h+='<span class="tom-rating" style="background:'+r.bg+';color:'+r.color+'">'+psc.total+'/25 \u2014 '+r.label+'</span>';}
+h+='</div><p style="font-size:12px;color:var(--dim)">'+p.desc+'</p></div>';
+
+qs.forEach(function(q,i){
+var k=pid+'_'+i,sc=state.scores[k]||0,cls=sc>0?'tom-q-card answered':'tom-q-card';
+h+='<div class="'+cls+'"><div class="tom-q-num">Q'+(state.pillar*5+i+1)+' of 25</div><div class="tom-q-text">'+q+'</div><div class="tom-score-row">';
+for(var v=1;v<=5;v++){var sel=sc===v?' selected':'';h+='<button class="tom-score-btn'+sel+'" onclick="tomScore(\''+pid+'\','+i+','+v+')" title="'+SCORE_LABELS[v]+'">'+v+'</button>';}
+h+='<span class="tom-score-label">'+(sc>0?SCORE_LABELS[sc]:'\u2014')+'</span></div></div>';
+});
+
+h+='<div class="tom-qual"><div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">Optional: In a sentence or two, what is the biggest challenge you face in this area?</div>';
+h+='<textarea id="tom-qual-'+pid+'" placeholder="This helps generate more personalised recommendations\u2026" oninput="tomQual(\''+pid+'\',this.value)">'+(state.quals[pid]||'')+'</textarea></div>';
+
+if(ad&&psc.total<=10){
+var opts=DEPTH_OPTIONS[pid];
+h+='<div class="tom-depth"><div style="display:flex;align-items:center;gap:6px;margin-bottom:10px"><span style="font-size:14px">\u26a0\ufe0f</span><span style="font-size:12px;font-weight:600;color:var(--cyan)">This pillar scored in the critical range. One more question to sharpen the diagnosis:</span></div>';
+h+='<div style="font-size:13px;color:var(--text);margin-bottom:10px;font-weight:500">Which best describes your situation?</div>';
+opts.forEach(function(opt,oi){var sel=state.depths[pid]===oi?' selected':'';h+='<div class="tom-depth-option'+sel+'" onclick="tomDepth(\''+pid+'\','+oi+')"><div class="tom-depth-radio"></div><div style="font-size:12px;color:var(--text);line-height:1.4">'+opt+'</div></div>';});
+h+='</div>';
+}
+
+h+='<div class="tom-nav">';
+if(state.pillar>0)h+='<button class="tom-btn tom-btn-secondary" onclick="tomPillar('+(state.pillar-1)+')">\u2190 Previous</button>';
+else h+='<button class="tom-btn tom-btn-secondary" onclick="tomIntro()">\u2190 Back</button>';
+if(state.pillar<4)h+='<button class="tom-btn tom-btn-primary" onclick="tomPillar('+(state.pillar+1)+')">Next pillar \u2192</button>';
+else{var ac=totAns()===25;h+='<button class="tom-btn tom-btn-primary" onclick="tomResults()"'+(ac?'':' disabled')+'>View results \u2192</button>';if(!ac)h+='<div style="font-size:11px;color:var(--dim);margin-top:6px;text-align:right">Answer all 25 questions to see results</div>';}
+h+='</div>';
+return h;
+}
+
+function renderResults(){
+var h='',total=totScore(),or=overRat(total);
+h+='<div style="max-width:680px;margin:0 auto;padding:12px 0">';
+h+='<div style="text-align:center;margin-bottom:32px"><div style="font-size:11px;color:var(--cyan);text-transform:uppercase;letter-spacing:0.12em;font-weight:600;margin-bottom:8px">Your TOM Diagnostic Result</div>';
+h+='<div style="font-size:56px;font-weight:700;color:#f1f5f9;font-family:\'JetBrains Mono\',monospace;line-height:1">'+total+'<span style="font-size:22px;color:var(--dim)">/125</span></div>';
+h+='<div class="tom-rating" style="background:'+or.color+'20;color:'+or.color+';font-size:14px;margin-top:8px">'+or.label+'</div></div>';
+h+='<h3 style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:14px">Pillar scores</h3>';
+
+var prs=PILLARS.map(function(p){var s=ps(p.id);return{pillar:p,score:s.total,rating:getRat(s.total)};});
+var sorted=prs.slice().sort(function(a,b){return a.score-b.score;});
+
+prs.forEach(function(pr){
+var p=pr.pillar,pct=pr.score/25*100;
+h+='<div class="tom-result-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">';
+h+='<div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:'+p.color+'"></div><span style="font-size:13px;font-weight:600;color:#f1f5f9">'+p.name+'</span></div>';
+h+='<div style="display:flex;align-items:center;gap:8px"><span class="tom-rating" style="background:'+pr.rating.bg+';color:'+pr.rating.color+'">'+pr.rating.label+'</span><span style="font-size:16px;font-weight:700;color:'+pr.rating.color+';font-family:\'JetBrains Mono\',monospace">'+pr.score+'/25</span></div></div>';
+h+='<div class="tom-bar-track"><div class="tom-bar-fill" style="width:'+pct+'%;background:'+p.color+';color:var(--navy)"></div></div>';
+if(pr.score<=10&&state.depths[p.id]!==undefined){h+='<div style="margin-top:8px;padding:8px 12px;border-radius:6px;background:rgba(244,63,94,0.06);border:1px solid rgba(244,63,94,0.15)"><div style="font-size:10px;font-weight:600;color:var(--danger);text-transform:uppercase;margin-bottom:2px">Root cause identified</div><div style="font-size:12px;color:var(--text)">'+DEPTH_OPTIONS[p.id][state.depths[p.id]]+'</div></div>';}
+if(state.quals[p.id]){h+='<div style="margin-top:8px;padding:8px 12px;border-radius:6px;background:var(--surface);border:1px solid var(--border)"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:2px">Your note</div><div style="font-size:12px;color:var(--dim);line-height:1.4;font-style:italic">\u201c'+state.quals[p.id]+'\u201d</div></div>';}
+h+='</div>';
+});
+
+var w=sorted[0];
+h+='<div class="tom-weakest"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:16px">\u26a0\ufe0f</span><span style="font-size:14px;font-weight:700;color:var(--danger)">Weakest link: '+w.pillar.name+'</span></div>';
+h+='<p style="font-size:13px;color:var(--text);line-height:1.6">Your organisation\u2019s operational ceiling is set by its weakest system, not its average. '+w.pillar.name+' scored '+w.score+'/25 ('+w.rating.label+'). This is where focused attention will have the most leverage on overall performance.</p></div>';
+
+h+='<h3 style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:6px">Priority recommendations</h3>';
+h+='<p style="font-size:12px;color:var(--dim);margin-bottom:14px">Based on your two weakest pillars. Each recommendation maps to a specific template from the TOM Method library.</p>';
+sorted.slice(0,2).forEach(function(pr){
+var p=pr.pillar,tmpls=TEMPLATES[p.id];
+h+='<div class="tom-rec"><div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><div style="width:6px;height:6px;border-radius:50%;background:'+p.color+'"></div><span style="font-size:13px;font-weight:600;color:#f1f5f9">'+p.name+' ('+pr.score+'/25)</span></div>';
+h+='<p style="font-size:12px;color:var(--dim);line-height:1.5;margin-bottom:10px">'+pr.rating.meaning+'</p>';
+h+='<div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px">Recommended templates:</div>';
+tmpls.forEach(function(t){h+='<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px"><span class="tom-template-tag">T'+t.num+'</span><div><div style="font-size:12px;font-weight:500;color:var(--text)">'+t.name+'</div><div style="font-size:11px;color:var(--dim)">'+t.desc+'</div></div></div>';});
+h+='</div>';
+});
+
+// Profile chart
+h+='<div class="tom-result-card" style="margin-top:20px"><h3 style="font-size:13px;font-weight:600;color:#f1f5f9;margin-bottom:12px">Infrastructure profile</h3>';
+h+='<div style="display:flex;align-items:flex-end;gap:12px;height:120px;padding-bottom:24px;border-bottom:1px solid var(--border);position:relative">';
+h+='<div style="position:absolute;left:0;bottom:24px;top:0;width:24px;display:flex;flex-direction:column;justify-content:space-between;font-size:9px;color:var(--faint);font-family:\'JetBrains Mono\',monospace;text-align:right"><span>25</span><span>15</span><span>5</span></div>';
+h+='<div style="display:flex;align-items:flex-end;gap:16px;flex:1;margin-left:32px;height:100%">';
+PILLARS.forEach(function(p){var s=ps(p.id).total,pct=(s-5)/20*100;h+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="font-size:11px;font-weight:700;color:'+p.color+';font-family:\'JetBrains Mono\',monospace">'+s+'</div><div style="width:100%;max-width:48px;height:'+Math.max(pct,4)+'%;background:'+p.color+';border-radius:4px 4px 0 0;opacity:0.8"></div></div>';});
+h+='</div></div>';
+h+='<div style="display:flex;gap:16px;margin-left:32px;margin-top:6px">';
+PILLARS.forEach(function(p){h+='<div style="flex:1;text-align:center;font-size:9px;color:var(--dim);line-height:1.2">'+p.short+'</div>';});
+h+='</div></div>';
+
+// CTA
+h+='<div class="tom-cta-box"><div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:0.1em;font-weight:600;margin-bottom:6px">What happens next</div>';
+h+='<h3 style="font-size:14px;color:#f1f5f9;font-weight:600;margin-bottom:8px">Turn this diagnostic into action</h3>';
+h+='<p style="font-size:12px;color:var(--dim);line-height:1.5;margin-bottom:4px">Book a free session to walk through your results, explore where the real leverage is, and decide which templates to implement first. No pitch, no obligation, just a conversation about what you found.</p>';
+h+='<a href="mailto:hello@unconsult.co?subject=TOM%20Diagnostic%20Results%20%E2%80%94%20'+total+'%2F125&body=I%20just%20completed%20the%20TOM%20diagnostic%20and%20scored%20'+total+'%2F125.%20My%20weakest%20pillar%20was%20'+encodeURIComponent(w.pillar.name)+'.%20I%E2%80%99d%20like%20to%20discuss%20next%20steps." class="tom-cta-link" target="_blank">Book a free session</a></div>';
+
+h+='<div style="text-align:center;margin-top:20px"><button class="tom-btn tom-btn-secondary" onclick="tomIntro()">Retake diagnostic</button></div>';
+h+='</div>';
+return h;
+}
+
+// ═══════ ACTIONS ═══════
+window.tomStart=function(){state.screen='diagnostic';state.pillar=0;render();};
+window.tomIntro=function(){state.screen='intro';render();};
+window.tomPillar=function(i){state.pillar=i;state.screen='diagnostic';render();};
+window.tomResults=function(){if(totAns()===25){state.screen='results';render();}};
+window.tomScore=function(pid,qi,val){state.scores[pid+'_'+qi]=val;render();};
+window.tomQual=function(pid,val){state.quals[pid]=val;};
+window.tomDepth=function(pid,oi){state.depths[pid]=oi;render();};
+
+render();
+})();
+</script>
+</body>
+</html>
